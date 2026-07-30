@@ -1,0 +1,99 @@
+.rich-text-field {
+  min-width: 0;
+}
+
+.rich-text-editor {
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-2);
+  background: var(--color-surface);
+  font-weight: 400;
+}
+
+.rich-text-editor:focus-within {
+  border-color: var(--color-technical);
+  box-shadow: var(--shadow-focus);
+}
+
+.rich-text-toolbar {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 2px;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-surface-subtle);
+  padding: 3px 5px;
+}
+
+.rich-text-tool {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-1);
+  background: transparent;
+  color: var(--color-text-muted);
+  padding: 0;
+}
+
+.rich-text-tool:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.rich-text-input {
+  overflow-y: auto;
+  outline: 0;
+  padding: 10px 12px;
+  color: var(--color-text);
+  font-size: var(--font-size-13);
+  line-height: 1.55;
+  white-space: normal;
+}
+
+.rich-text-input:empty::before {
+  color: var(--color-text-faint);
+  content: attr(data-placeholder);
+  pointer-events: none;
+}
+
+.rich-text-input ul,
+.rich-text-input ol,
+.formatted-text ul,
+.formatted-text ol {
+  margin: 6px 0;
+  padding-left: 22px;
+}
+
+.rich-text-input p,
+.rich-text-input div,
+.formatted-text p,
+.formatted-text div {
+  margin: 0 0 5px;
+}
+
+.rich-text-input mark,
+.rich-text-input span[style*='background-color'],
+.formatted-text mark,
+.formatted-text span[style*='background-color'] {
+  border-radius: 2px;
+  background: #fff2a8;
+  color: #202426;
+  padding: 0 2px;
+}
+
+.formatted-text {
+  min-width: 0;
+  color: inherit;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.formatted-text > :first-child {
+  margin-top: 0;
+}
+
+.formatted-text > :last-child {
+  margin-bottom: 0;
+}

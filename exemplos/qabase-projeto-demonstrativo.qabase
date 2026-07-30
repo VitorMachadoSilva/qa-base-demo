@@ -1,0 +1,114 @@
+{
+  "format": "qabase.project-backup",
+  "version": 1,
+  "manifest": {
+    "application": "QaBase",
+    "exportedAt": "2026-07-29T00:52:18.710Z",
+    "sourceProjectName": "Projeto demonstrativo QaBase",
+    "counts": {
+      "suites": 1,
+      "testCases": 1,
+      "testSteps": 2,
+      "testComponents": 0,
+      "testCaseComponents": 0,
+      "testPlans": 0,
+      "testPlanSections": 0,
+      "testPlanItems": 0,
+      "milestones": 0,
+      "environments": 0,
+      "configurationGroups": 0,
+      "configurationOptions": 0,
+      "validationFolders": 0,
+      "validationBriefs": 0,
+      "validationCriteria": 0,
+      "validationChecks": 0,
+      "validationNotes": 0,
+      "runs": 0,
+      "runPlanSections": 0,
+      "runTestCases": 0,
+      "runConfigurations": 0,
+      "productionDemands": 0,
+      "productionDemandActivities": 0
+    }
+  },
+  "payload": {
+    "project": {
+      "name": "Projeto demonstrativo QaBase",
+      "description": "Backup de exemplo para validar a importacao por projeto.",
+      "createdAt": "2026-07-29T00:52:18.688Z",
+      "updatedAt": "2026-07-29T00:52:18.688Z"
+    },
+    "collections": {
+      "suites": [
+        {
+          "ref": "suite:114",
+          "parentRef": null,
+          "name": "Autenticacao",
+          "description": "Cenarios essenciais de acesso ao sistema.",
+          "createdAt": "2026-07-29T00:52:18.695Z",
+          "updatedAt": "2026-07-29T00:52:18.695Z"
+        }
+      ],
+      "testCases": [
+        {
+          "ref": "case:116",
+          "suiteRef": "suite:114",
+          "title": "Realizar login com credenciais validas",
+          "preconditions": "Usuario ativo e pagina de login aberta.",
+          "steps": "Informar credenciais e confirmar o acesso.",
+          "expectedResult": "O usuario acessa a pagina inicial.",
+          "priority": "High",
+          "type": "Functional",
+          "severity": "High",
+          "automationStatus": "Manual",
+          "createdAt": "2026-07-29T00:52:18.700Z",
+          "updatedAt": "2026-07-29T00:52:18.700Z"
+        }
+      ],
+      "testSteps": [
+        {
+          "ref": "step:208",
+          "testCaseRef": "case:116",
+          "position": 0,
+          "action": "Informar o usuario cadastrado.",
+          "expectedResult": "O campo aceita o identificador.",
+          "createdAt": "2026-07-29T00:52:18.706Z",
+          "updatedAt": "2026-07-29T00:52:18.706Z"
+        },
+        {
+          "ref": "step:209",
+          "testCaseRef": "case:116",
+          "position": 1,
+          "action": "Informar a senha valida e confirmar.",
+          "expectedResult": "O sistema abre a pagina inicial sem apresentar erro.",
+          "createdAt": "2026-07-29T00:52:18.706Z",
+          "updatedAt": "2026-07-29T00:52:18.706Z"
+        }
+      ],
+      "testComponents": [],
+      "testCaseComponents": [],
+      "testPlans": [],
+      "testPlanSections": [],
+      "testPlanItems": [],
+      "milestones": [],
+      "environments": [],
+      "configurationGroups": [],
+      "configurationOptions": [],
+      "validationFolders": [],
+      "validationBriefs": [],
+      "validationCriteria": [],
+      "validationChecks": [],
+      "validationNotes": [],
+      "runs": [],
+      "runPlanSections": [],
+      "runTestCases": [],
+      "runConfigurations": [],
+      "productionDemands": [],
+      "productionDemandActivities": []
+    }
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "payloadHash": "8f231c4fe2591d63e43c33f5933a476f3a9575c7b7ac6950bfca15b578d64395"
+  }
+}

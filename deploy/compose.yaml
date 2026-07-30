@@ -1,0 +1,31 @@
+services:
+  qabase:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: qabase:local
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: file:/data/qabase.db
+      HOST: 0.0.0.0
+      NODE_ENV: production
+      PORT: 3001
+      QABASE_FRONTEND_DIST: /app/frontend/dist
+    ports:
+      - "${QABASE_PORT:-8080}:3001"
+    volumes:
+      - qabase-data:/data
+      - ./backups:/backups
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    stop_grace_period: 15s
+
+volumes:
+  qabase-data:
+    name: qabase-data

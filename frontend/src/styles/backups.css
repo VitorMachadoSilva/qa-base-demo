@@ -1,0 +1,235 @@
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.project-command-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backup-backdrop {
+  z-index: 90;
+}
+
+.backup-modal {
+  width: min(680px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border-top: 3px solid var(--color-technical);
+}
+
+.backup-modal-header {
+  align-items: flex-start;
+}
+
+.backup-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.backup-heading-icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  color: var(--color-technical);
+  background: var(--color-technical-soft);
+}
+
+.backup-heading h2 {
+  margin-top: 2px;
+}
+
+.backup-source-strip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--color-line);
+  border-left: 3px solid var(--color-result-passed);
+  border-radius: 5px;
+  padding: 12px;
+  background: var(--color-surface-subtle);
+}
+
+.backup-source-strip > svg:first-child {
+  color: var(--color-result-passed);
+}
+
+.backup-source-strip > svg:last-child {
+  color: var(--color-technical);
+}
+
+.backup-source-strip div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.backup-source-strip strong,
+.backup-source-strip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.backup-source-strip span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-12);
+}
+
+.backup-count-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin: 14px 0;
+  border: 1px solid var(--color-line);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.backup-count {
+  display: grid;
+  min-width: 0;
+  min-height: 68px;
+  align-content: center;
+  gap: 4px;
+  border-right: 1px solid var(--color-line);
+  padding: 10px;
+  text-align: center;
+}
+
+.backup-count:last-child {
+  border-right: 0;
+}
+
+.backup-count span {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.backup-count strong {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-20);
+  font-weight: 500;
+}
+
+.backup-checksum {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+}
+
+.backup-checksum code {
+  overflow: hidden;
+  padding: 7px 9px;
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  color: var(--color-text);
+  background: var(--color-canvas);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.backup-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 14px;
+  border-left: 3px solid var(--color-technical);
+  padding: 10px 12px;
+  color: var(--color-text-muted);
+  background: var(--color-technical-soft);
+  font-size: var(--font-size-13);
+  line-height: 1.45;
+}
+
+.backup-warning svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--color-technical);
+}
+
+.backup-error {
+  margin-top: 12px;
+}
+
+@media (max-width: 760px) {
+  .project-command-actions {
+    width: 100%;
+  }
+
+  .project-command-actions button {
+    flex: 1;
+  }
+
+  .backup-count-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .backup-count {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .backup-count:nth-child(3n) {
+    border-right: 0;
+  }
+
+  .backup-count:nth-last-child(-n + 3) {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .project-command-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .backup-count-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .backup-count:nth-child(3n) {
+    border-right: 1px solid var(--color-line);
+  }
+
+  .backup-count:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .backup-count:nth-last-child(-n + 3) {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .backup-count:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+
+  .backup-modal .modal-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .backup-modal .modal-actions button {
+    width: 100%;
+  }
+}

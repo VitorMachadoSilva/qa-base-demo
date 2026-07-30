@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+database.db
+backend/database.db
+backend/prisma/dev.db
+backend/prisma/dev.db-shm
+backend/prisma/dev.db-wal
+deploy/.env
+deploy/backups/*.db
+/backups/
+backend/storage/
+.vercel/
+/private/
+*.log
+.DS_Store

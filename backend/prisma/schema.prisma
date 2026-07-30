@@ -1,0 +1,719 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                   Int       @id @default(autoincrement())
+  email                String    @unique
+  name                 String
+  passwordHash         String
+  active               Boolean   @default(true)
+  mustChangePassword   Boolean   @default(true)
+  expiresAt            DateTime?
+  passwordNoticeSeenAt DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  sessions   Session[]
+  quickNotes QuickNote[]
+  projects   Project[]
+
+  @@index([active, email])
+}
+
+model Session {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  ownerId     Int
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner               User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  suites              Suite[]
+  runs                Run[]
+  testPlans           TestPlan[]
+  milestones          Milestone[]
+  environments        Environment[]
+  configurationGroups ConfigurationGroup[]
+  validationFolders   ValidationFolder[]
+  validationBriefs    ValidationBrief[]
+  testComponents      TestComponent[]
+  productionDemands   ProductionDemand[]
+
+  @@index([ownerId, createdAt])
+}
+
+model Suite {
+  id          Int      @id @default(autoincrement())
+  projectId   Int
+  parentId    Int?
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent    Suite?     @relation("SuiteHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Suite[]    @relation("SuiteHierarchy")
+  testCases TestCase[]
+
+  @@index([projectId, parentId])
+}
+
+model TestCase {
+  id               Int      @id @default(autoincrement())
+  suiteId          Int
+  title            String
+  preconditions    String?
+  steps            String
+  expectedResult   String
+  priority         String   @default("Medium")
+  type             String   @default("Functional")
+  severity         String   @default("Normal")
+  automationStatus String   @default("Manual")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  suite            Suite               @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+  testSteps        TestStep[]
+  runTestCases     RunTestCase[]
+  planItems        TestPlanItem[]
+  validationChecks ValidationCheck[]
+  components       TestCaseComponent[]
+
+  @@index([suiteId])
+}
+
+model TestStep {
+  id             Int      @id @default(autoincrement())
+  testCaseId     Int
+  position       Int
+  action         String
+  expectedResult String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  testCase TestCase @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+
+  @@unique([testCaseId, position])
+}
+
+model Run {
+  id                        Int       @id @default(autoincrement())
+  projectId                 Int
+  testPlanId                Int?
+  milestoneId               Int?
+  environmentId             Int?
+  name                      String
+  status                    String    @default("Active")
+  snapshotPlanName          String?
+  snapshotMilestoneName     String?
+  snapshotEnvironmentName   String?
+  snapshotEnvironmentTarget String?
+  completedAt               DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  project           Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  testPlan          TestPlan?          @relation(fields: [testPlanId], references: [id], onDelete: SetNull)
+  milestone         Milestone?         @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  environment       Environment?       @relation(fields: [environmentId], references: [id], onDelete: SetNull)
+  runTestCases      RunTestCase[]
+  runConfigurations RunConfiguration[]
+  planSections      RunPlanSection[]
+  productionDemands ProductionDemand[]
+
+  @@index([projectId, status])
+  @@index([projectId, testPlanId])
+  @@index([projectId, milestoneId])
+  @@index([projectId, environmentId])
+}
+
+model RunTestCase {
+  id                       Int       @id @default(autoincrement())
+  runId                    Int
+  testCaseId               Int?
+  runPlanSectionId         Int?
+  position                 Int
+  transitionInstructions   String?
+  dependsOnRunTestCaseId   Int?
+  status                   String    @default("Untested")
+  comment                  String?
+  actualResult             String?
+  evidence                 String?
+  defectLink               String?
+  executor                 String?
+  durationSeconds          Int?
+  snapshotTitle            String?
+  snapshotPreconditions    String?
+  snapshotSteps            String?
+  snapshotExpectedResult   String?
+  snapshotPriority         String?
+  snapshotType             String?
+  snapshotSeverity         String?
+  snapshotAutomationStatus String?
+  executedAt               DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  run                   Run             @relation(fields: [runId], references: [id], onDelete: Cascade)
+  testCase              TestCase?       @relation(fields: [testCaseId], references: [id], onDelete: SetNull)
+  runPlanSection        RunPlanSection? @relation(fields: [runPlanSectionId], references: [id], onDelete: SetNull)
+  dependsOnRunTestCase  RunTestCase?    @relation("RunTestCaseDependency", fields: [dependsOnRunTestCaseId], references: [id], onDelete: SetNull)
+  dependentRunTestCases RunTestCase[]   @relation("RunTestCaseDependency")
+
+  @@unique([runPlanSectionId, position])
+  @@index([runId, status])
+  @@index([runId, position])
+  @@index([dependsOnRunTestCaseId])
+}
+
+model TestPlan {
+  id          Int      @id @default(autoincrement())
+  projectId   Int
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project  Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  items    TestPlanItem[]
+  sections TestPlanSection[]
+  runs     Run[]
+
+  @@unique([projectId, name])
+  @@index([projectId, updatedAt])
+}
+
+model TestPlanItem {
+  id                     Int      @id @default(autoincrement())
+  testPlanId             Int
+  sectionId              Int
+  testCaseId             Int
+  position               Int
+  transitionInstructions String?
+  dependsOnItemId        Int?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  testPlan       TestPlan        @relation(fields: [testPlanId], references: [id], onDelete: Cascade)
+  section        TestPlanSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  testCase       TestCase        @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  dependsOnItem  TestPlanItem?   @relation("TestPlanItemDependency", fields: [dependsOnItemId], references: [id], onDelete: SetNull)
+  dependentItems TestPlanItem[]  @relation("TestPlanItemDependency")
+
+  @@unique([sectionId, position])
+  @@index([testPlanId])
+  @@index([testCaseId])
+  @@index([dependsOnItemId])
+}
+
+model TestPlanSection {
+  id          Int      @id @default(autoincrement())
+  testPlanId  Int
+  name        String
+  description String?
+  position    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  testPlan TestPlan       @relation(fields: [testPlanId], references: [id], onDelete: Cascade)
+  items    TestPlanItem[]
+
+  @@unique([testPlanId, position])
+  @@index([testPlanId])
+}
+
+model RunPlanSection {
+  id          Int      @id @default(autoincrement())
+  runId       Int
+  name        String
+  description String?
+  position    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  run   Run           @relation(fields: [runId], references: [id], onDelete: Cascade)
+  items RunTestCase[]
+
+  @@unique([runId, position])
+  @@index([runId])
+}
+
+model TestComponent {
+  id             Int      @id @default(autoincrement())
+  projectId      Int
+  name           String
+  normalizedName String
+  description    String?
+  position       Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project   Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  testCases TestCaseComponent[]
+
+  @@unique([projectId, normalizedName])
+  @@unique([projectId, position])
+  @@index([projectId])
+}
+
+model TestCaseComponent {
+  testCaseId  Int
+  componentId Int
+  createdAt   DateTime @default(now())
+
+  testCase  TestCase      @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  component TestComponent @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  @@id([testCaseId, componentId])
+  @@index([componentId])
+}
+
+model Milestone {
+  id          Int       @id @default(autoincrement())
+  projectId   Int
+  name        String
+  description String?
+  status      String    @default("Upcoming")
+  startDate   DateTime?
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  project           Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  runs              Run[]
+  productionDemands ProductionDemand[]
+
+  @@unique([projectId, name])
+  @@index([projectId, status])
+}
+
+model Environment {
+  id          Int      @id @default(autoincrement())
+  projectId   Int
+  name        String
+  description String?
+  target      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  runs    Run[]
+
+  @@unique([projectId, name])
+  @@index([projectId, updatedAt])
+}
+
+model ConfigurationGroup {
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  name      String
+  position  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  options ConfigurationOption[]
+
+  @@unique([projectId, name])
+  @@unique([projectId, position])
+}
+
+model ConfigurationOption {
+  id        Int      @id @default(autoincrement())
+  groupId   Int
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  group             ConfigurationGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  runConfigurations RunConfiguration[]
+
+  @@unique([groupId, name])
+  @@index([groupId])
+}
+
+model RunConfiguration {
+  id                 Int      @id @default(autoincrement())
+  runId              Int
+  optionId           Int?
+  position           Int
+  snapshotGroupName  String
+  snapshotOptionName String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  run    Run                  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  option ConfigurationOption? @relation(fields: [optionId], references: [id], onDelete: SetNull)
+
+  @@unique([runId, position])
+  @@index([runId])
+  @@index([optionId])
+}
+
+model ValidationFolder {
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  parentId  Int?
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project  Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   ValidationFolder?  @relation("ValidationFolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children ValidationFolder[] @relation("ValidationFolderHierarchy")
+  briefs   ValidationBrief[]
+
+  @@index([projectId, parentId])
+}
+
+model ValidationBrief {
+  id           Int       @id @default(autoincrement())
+  projectId    Int
+  folderId     Int?
+  title        String
+  sourceUrl    String?
+  objective    String?
+  scope        String?
+  generalNotes String?
+  status       String    @default("Draft")
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  project           Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  folder            ValidationFolder?     @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  criteria          ValidationCriterion[]
+  checks            ValidationCheck[]
+  notes             ValidationNote[]
+  productionDemands ProductionDemand[]
+
+  @@index([projectId, folderId])
+  @@index([projectId, status])
+  @@index([projectId, updatedAt])
+}
+
+model ValidationCriterion {
+  id        Int      @id @default(autoincrement())
+  briefId   Int
+  position  Int
+  text      String
+  isMet     Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brief ValidationBrief @relation(fields: [briefId], references: [id], onDelete: Cascade)
+
+  @@unique([briefId, position])
+  @@index([briefId])
+}
+
+model ValidationCheck {
+  id             Int       @id @default(autoincrement())
+  briefId        Int
+  testCaseId     Int?
+  position       Int
+  title          String
+  expectedResult String
+  actualResult   String?
+  notes          String?
+  status         String    @default("Untested")
+  executedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  brief    ValidationBrief @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  testCase TestCase?       @relation(fields: [testCaseId], references: [id], onDelete: SetNull)
+
+  @@unique([briefId, position])
+  @@index([briefId, status])
+  @@index([testCaseId])
+}
+
+model ValidationNote {
+  id        Int      @id @default(autoincrement())
+  briefId   Int
+  kind      String   @default("Note")
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brief ValidationBrief @relation(fields: [briefId], references: [id], onDelete: Cascade)
+
+  @@index([briefId, createdAt])
+}
+
+model ProductionDemand {
+  id                    Int       @id @default(autoincrement())
+  projectId             Int
+  type                  String
+  code                  String
+  normalizedCode        String
+  sourceUrl             String?
+  title                 String
+  description           String?
+  supportContact        String
+  qaOwner               String
+  status                String    @default("Open")
+  registeredAt          DateTime
+  dueDate               DateTime?
+  criticality           String?
+  affectedUsersCount    Int?
+  workaroundSummary     String?
+  workaroundDeliveredAt DateTime?
+  resolutionSummary     String?
+  productionVersion     String?
+  productionReleasedAt  DateTime?
+  closureReason         String?
+  closedAt              DateTime?
+  validationBriefId     Int?
+  runId                 Int?
+  milestoneId           Int?
+  linkedAdId            Int?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  project         Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  validationBrief ValidationBrief?           @relation(fields: [validationBriefId], references: [id], onDelete: SetNull)
+  run             Run?                       @relation(fields: [runId], references: [id], onDelete: SetNull)
+  milestone       Milestone?                 @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  linkedAd        ProductionDemand?          @relation("ProductionDemandAdLink", fields: [linkedAdId], references: [id], onDelete: SetNull)
+  relatedMfs      ProductionDemand[]         @relation("ProductionDemandAdLink")
+  activities      ProductionDemandActivity[]
+
+  @@unique([projectId, type, normalizedCode])
+  @@index([projectId, status, dueDate])
+  @@index([projectId, type, criticality])
+  @@index([projectId, qaOwner])
+  @@index([validationBriefId])
+  @@index([runId])
+  @@index([milestoneId])
+  @@index([linkedAdId])
+}
+
+model ProductionDemandActivity {
+  id            Int      @id @default(autoincrement())
+  demandId      Int
+  kind          String
+  message       String
+  author        String?
+  previousState String?
+  nextState     String?
+  createdAt     DateTime @default(now())
+
+  demand ProductionDemand @relation(fields: [demandId], references: [id], onDelete: Cascade)
+
+  @@index([demandId, createdAt, id])
+}
+
+model ThirdParty {
+  id                Int       @id @default(autoincrement())
+  name              String
+  normalizedName    String
+  company           String
+  normalizedCompany String
+  role              String
+  contact           String?
+  internalOwner     String
+  notes             String?
+  archivedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  cycles     ThirdPartyAccessCycle[]
+  activities ThirdPartyAccessActivity[]
+
+  @@unique([normalizedName, normalizedCompany])
+  @@index([company])
+  @@index([internalOwner])
+  @@index([archivedAt, updatedAt])
+}
+
+model ThirdPartyAccessCycle {
+  id            Int       @id @default(autoincrement())
+  thirdPartyId  Int
+  approvedAt    DateTime
+  expiresAt     DateTime
+  closedAt      DateTime?
+  closureKind   String?
+  closureReason String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  thirdParty ThirdParty                 @relation(fields: [thirdPartyId], references: [id], onDelete: Cascade)
+  grants     ThirdPartyAccessGrant[]
+  activities ThirdPartyAccessActivity[]
+
+  @@index([thirdPartyId, closedAt, expiresAt])
+  @@index([expiresAt])
+}
+
+model ThirdPartyAccessGrant {
+  id        Int      @id @default(autoincrement())
+  cycleId   Int
+  system    String
+  createdAt DateTime @default(now())
+
+  cycle ThirdPartyAccessCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@unique([cycleId, system])
+  @@index([system])
+}
+
+model ThirdPartyAccessActivity {
+  id           Int      @id @default(autoincrement())
+  thirdPartyId Int
+  cycleId      Int?
+  kind         String
+  message      String
+  author       String?
+  createdAt    DateTime @default(now())
+
+  thirdParty ThirdParty             @relation(fields: [thirdPartyId], references: [id], onDelete: Cascade)
+  cycle      ThirdPartyAccessCycle? @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+
+  @@index([thirdPartyId, createdAt, id])
+  @@index([cycleId])
+}
+
+model QuickNote {
+  id         Int      @id @default(autoincrement())
+  ownerId    Int
+  title      String?
+  content    String
+  color      String   @default("Paper")
+  pinned     Boolean  @default(false)
+  createdDay String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, createdDay, pinned, updatedAt])
+  @@index([ownerId, pinned, updatedAt])
+}
+
+model NotificationSettings {
+  id                    Int       @id @default(1)
+  enabled               Boolean   @default(false)
+  timeZone              String    @default("America/Sao_Paulo")
+  sendTime              String    @default("09:00")
+  demandCadenceDays     Int       @default(2)
+  telegramChatId        String?
+  telegramChatTitle     String?
+  telegramChatType      String?
+  telegramBotId         String?
+  telegramBotUsername   String?
+  botVerifiedAt         DateTime?
+  channelVerifiedAt     DateTime?
+  nextDemandReportDay   String?
+  nextAccessReportDay   String?
+  lastDiscoveryUpdateId String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  accessLeadDays NotificationAccessLeadDay[]
+}
+
+model NotificationAccessLeadDay {
+  id         Int      @id @default(autoincrement())
+  settingsId Int
+  days       Int
+  createdAt  DateTime @default(now())
+
+  settings NotificationSettings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+
+  @@unique([settingsId, days])
+  @@index([settingsId, days])
+}
+
+model NotificationDelivery {
+  id                    Int       @id @default(autoincrement())
+  originalDeliveryId    Int?
+  type                  String
+  trigger               String
+  plannedDay            String?
+  status                String    @default("Pending")
+  sourceCount           Int       @default(0)
+  dedupKey              String    @unique
+  channelChatIdSnapshot String?
+  channelTitleSnapshot  String?
+  channelTypeSnapshot   String?
+  botUsernameSnapshot   String?
+  payloadSnapshot       String
+  safeErrorCode         String?
+  safeErrorMessage      String?
+  startedAt             DateTime?
+  finishedAt            DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  originalDelivery NotificationDelivery?     @relation("NotificationDeliveryResend", fields: [originalDeliveryId], references: [id], onDelete: SetNull)
+  resends          NotificationDelivery[]    @relation("NotificationDeliveryResend")
+  parts            NotificationMessagePart[]
+
+  @@index([type, plannedDay])
+  @@index([status, createdAt])
+  @@index([originalDeliveryId])
+}
+
+model NotificationMessagePart {
+  id                Int       @id @default(autoincrement())
+  deliveryId        Int
+  position          Int
+  body              String
+  status            String    @default("Pending")
+  telegramMessageId String?
+  sentAt            DateTime?
+  nextAttemptAt     DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  delivery NotificationDelivery  @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  attempts NotificationAttempt[]
+
+  @@unique([deliveryId, position])
+  @@index([status, nextAttemptAt])
+}
+
+model NotificationAttempt {
+  id                Int       @id @default(autoincrement())
+  partId            Int
+  attemptNumber     Int
+  status            String
+  httpStatus        Int?
+  safeErrorCode     String?
+  safeErrorMessage  String?
+  telegramMessageId String?
+  startedAt         DateTime  @default(now())
+  finishedAt        DateTime?
+  nextRetryAt       DateTime?
+
+  part NotificationMessagePart @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@unique([partId, attemptNumber])
+  @@index([partId, startedAt])
+}
